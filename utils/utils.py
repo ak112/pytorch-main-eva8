@@ -4,9 +4,7 @@ from typing import Tuple, Any
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
-
-class Cifar10Dataset(torchvision.datasets.CIFAR10):
-    '''Custom class that creates the transformed CIFAR-10 DataSet'''
+class Cifar10Net(torchvision.datasets.CIFAR10):
 
     def __init__(self, root='~/data/cifar10', train=True, download=True, transform=None):
         super().__init__(root=root, 
@@ -40,8 +38,6 @@ def get_device():
     cuda = torch.cuda.is_available()
     return 'cuda' if cuda else 'cpu'
 
-
-
 def get_test_transforms():
     test_transforms = A.Compose([
 
@@ -61,5 +57,5 @@ def get_dataloader_args(batch_size):
 
 def load_data(train=True, dataloader_args=dict(shuffle=True, batch_size=64),
               transforms=None):
-    dataset = Cifar10Dataset(root='./data', train=train, download=True, transform=transforms)
+    dataset = Cifar10Net(root='./data', train=train, download=True, transform=transforms)
     return torch.utils.data.DataLoader(dataset, **dataloader_args)
