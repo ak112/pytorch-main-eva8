@@ -24,18 +24,18 @@ def plot_stats(train_stats, test_stats, labels,xlabel=None, ylabel=None, title=N
 
 
 
-def plot_images(misclassified_imgs_dict, imgs=10):
+def plot_images(misclassified_images_dict, imgs=10):
     fig, axs = plt.subplots(5, 4, figsize=(10, 10), squeeze=False)
     fig.tight_layout(h_pad=2)
     idx = 0
-    key_list = iter(list(misclassified_imgs_dict.keys()))
+    key_list = iter(list(misclassified_images_dict.keys()))
 
     for i in range(5):
         for j in range(4):
             idx = next(key_list)
-            img = misclassified_imgs_dict[idx][0]
-            true_label = idx_to_class(misclassified_imgs_dict[idx][1])
-            pred_label = idx_to_class(misclassified_imgs_dict[idx][2].item())
+            img = misclassified_images_dict[idx][0]
+            true_label = idx_to_class(misclassified_images_dict[idx][1])
+            pred_label = idx_to_class(misclassified_images_dict[idx][2].item())
 
             axs[i, j].imshow(np.transpose(img, (1,2,0)), cmap='gray')
             axs[i, j].axis('off')
