@@ -15,7 +15,7 @@ def get_cam(model, target_layers, use_cuda=True):
     return GradCAM(model=model, target_layers=target_layers, use_cuda=True)
 
 def image_cam(img, mask, alpha=1.0):
-    heatmap = cv2.applyColorMap(np.uint8(255 * mask), cv2.COLORMAP_HOT)
+    heatmap = cv2.applyColorMap(np.uint8(255 * mask), cv2.COLORMAP_JET)
     heatmap = np.float32(heatmap) / 255
     cam = heatmap + np.float32(img)
     cam = cam / np.max(cam)
