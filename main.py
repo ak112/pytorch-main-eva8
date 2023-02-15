@@ -18,7 +18,7 @@ class Trainer:
         self.test_acc = []
         self.train_loss_avg = []
         self.train_acc_avg = []
-        self.misclassified_imgs = {}
+        self.misclassified_images = {}
 
 
     def get_train_stats(self):
@@ -73,7 +73,7 @@ class Trainer:
                 data, target = data.to(self.device), target.to(self.device)
                 output = self.model(data)
                 test_loss += self.criterion(output, target)
-                pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
+                pred = output.argmax(dim=1, keepdim=True)
                 correct += pred.eq(target.view_as(pred)).sum().item()
 
         test_loss /= len(test_loader.dataset)
@@ -97,9 +97,9 @@ class Trainer:
 
                 for sample in range(data.shape[0]):
                     if (target[sample] != pred[sample]):
-                        self.misclassified_imgs[idx] = [data[sample].cpu(), target[sample].cpu(), pred[sample].cpu()]
+                        self.misclassified_images[idx] = [data[sample].cpu(), target[sample].cpu(), pred[sample].cpu()]
                     idx += 1
-        return self.misclassified_imgs
+        return self.misclassified_images
 
 
 def get_criterion_for_classification():
