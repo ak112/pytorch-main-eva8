@@ -14,8 +14,8 @@ def idx_to_class(idx):
 def get_cam(model, target_layers, use_cuda=True):
     return GradCAM(model=model, target_layers=target_layers, use_cuda=True)
 
-def show_cam_on_image(img, mask, alpha=1.0):
-    heatmap = cv2.applyColorMap(np.uint8(255 * mask), cv2.COLORMAP_JET)
+def image_cam(img, mask, alpha=1.0):
+    heatmap = cv2.applyColorMap(np.uint8(255 * mask), cv2.COLORMAP_HOT)
     heatmap = np.float32(heatmap) / 255
     cam = heatmap + np.float32(img)
     cam = cam / np.max(cam)
@@ -41,7 +41,7 @@ def plot_cam(cam_obj, misclassified_images_dict, keys_list=None):
 
         grayscale_cam = cam_obj(input_tensor=img2, targets=target)
         grayscale_cam = grayscale_cam[0, :]
-        cam = show_cam_on_image(np.transpose(img2.squeeze(), (1,2,0)), grayscale_cam)
+        cam = image_cam(np.transpose(img2.squeeze(), (1,2,0)), grayscale_cam)
         axs[i, 0].imshow(np.transpose(img2.squeeze(), (1,2,0)), cmap='gray', interpolation='bilinear')
         axs[i, 1].imshow(cam, interpolation='bilinear')
 
