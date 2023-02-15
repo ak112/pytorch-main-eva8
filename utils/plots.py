@@ -24,7 +24,7 @@ def plot_stats(train_stats, test_stats, labels,xlabel=None, ylabel=None, title=N
 
 
 
-def plot_imgs(misclassified_imgs_dict, imgs=10):
+def plot_images(misclassified_imgs_dict, imgs=10):
     fig, axs = plt.subplots(5, 4, figsize=(10, 10), squeeze=False)
     fig.tight_layout(h_pad=2)
     idx = 0
