@@ -20,7 +20,7 @@ def image_cam(img, mask, alpha=1.0):
     cam = heatmap + np.float32(img)
     cam = cam / np.max(cam)
     cam = np.uint8(255 * cam)
-    return cam
+    return ca
 
 
 def plot_cam(cam_obj, misclassified_images_dict, keys_list=None):
