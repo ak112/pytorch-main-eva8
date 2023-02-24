@@ -21,9 +21,9 @@ class UltimusBlock(nn.Module):
         
         return out
 
-class MyNet(nn.Module):
+class BaseTransformer(nn.Module):
     def __init__(self):
-        super(MyNet, self).__init__()
+        super(BaseTransformer, self).__init__()
         self.conv1 = nn.Conv2d(3, 16, 3, padding=1)
         self.conv2 = nn.Conv2d(16, 32, 3, padding=1)
         self.conv3 = nn.Conv2d(32, 48, 3, padding=1)
