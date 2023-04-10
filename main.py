@@ -1,11 +1,88 @@
 from tqdm import tqdm
+from typing import Tuple, List
 import torch
 import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 import torch.nn as nn
 import numpy as np
+from torch.utils.data import DataLoader
+import time
 
+def trainTransformer(model: nn.Module, trainloader: DataLoader,
+                    testloader: DataLoader, epochs: int = 25, lr_max: float = 0.01,
+                    clip_norm: bool = True, scheduler_flag: bool = False) -> Tuple[nn.Module, Tuple[List[float], List[float], List[float], List[float], List[float]]]:
 
+    training_acc, training_loss, testing_acc, testing_loss = list(), list(), list(), list()
+    lr_hist = []
+
+    # Define learning rate scheduler
+    if scheduler_flag:
+        lr_schedule = lambda t: np.interp([t], [0, epochs*2//5, epochs*4//5,epochs],
+                                         [0, lr_max, lr_max/20.0, 0])[0]
+
+    # Define optimizer and criterion 
+    model = nn.DataParallel(model, device_ids=[0]).cuda()
+    opt = optim.AdamW(model.parameters(), lr=lr_max, weight_decay=0.01)
+    criterion = nn.CrossEntropyLoss()
+    scaler = torch.cuda.amp.GradScaler()
+
+    for epoch in range(epochs):
+        start = time.time()
+        train_loss, train_acc, n = 0, 0, 0
+
+        for i, (X,y) in enumerate(trainloader):
+            model.train()
+            X, y = X.cuda(), y.cuda()
+
+            # Update learning rate
+            if scheduler_flag:
+                lr = lr_schedule(epoch + (i + 1)/len(trainloader))
+                opt.param_groups[0].update(lr=lr)
+                lr_hist.append(lr)
+
+            opt.zero_grad()
+            with torch.cuda.amp.autocast():
+                output = model(X)
+                loss = criterion(output, y)
+
+            scaler.scale(loss).backward()
+
+            if clip_norm:
+                scaler.unscale_(opt)
+                nn.utils.clip_grad_norm_(model.parameters(),1.0)
+            
+            scaler.step(opt)
+            scaler.update()
+
+            train_loss += loss.item() * y.size(0)
+            train_acc += (output.max(1)[1] == y).sum().item()
+            n += y.size(0)
+        
+        # Calculate testing accuracy and loss
+        model.eval()
+        test_loss, test_acc, m = 0, 0, 0
+
+        with torch.no_grad():
+            for X, y in testloader:
+                X, y = X.cuda(), y.cuda()
+                with torch.cuda.amp.autocast():
+                    output = model(X)
+                    test_loss += criterion(output, y).item() * y.size(0)
+                    test_acc += (output.max(1)[1] == y).sum().item()
+
+                    m += y.size(0)
+
+        train_loss /= n
+        train_acc /= n
+        test_loss /= m
+        test_acc /= m
+
+        print(f'VIT: Epoch: {epoch} | ',
+              f'Train Acc: {train_acc:.4f}, ',
+              f'Test Acc: {test_acc:.4f}, ',
+              f'Time: {time.time() - start:.1f}, ',
+              f'lr: {lr:.6f}')
+    return model, training_acc, training_loss, testing_acc, testing_loss
 
 def trainOneCLR(model, device, train_loader, criterion, scheduler, optimizer, use_l1=False, lambda_l1=0.01):
 
@@ -80,6 +157,7 @@ def testOneCLR(model, device, test_loader, criterion):
 
 
 def save_model(model, epoch, optimizer, path):
+
     state = {
         'epoch': epoch,
         'state_dict': model.state_dict(),
@@ -109,7 +187,6 @@ def fit_model(net, optimizer, criterion, device, NUM_EPOCHS,train_loader, test_l
             scheduler=scheduler
         )
         test_acc, test_loss = testOneCLR(net, device, test_loader, criterion)
-        # update LR
         if scheduler:
             if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
                 scheduler.step(test_loss)
@@ -136,6 +213,7 @@ def fit_model(net, optimizer, criterion, device, NUM_EPOCHS,train_loader, test_l
         return net, (training_acc, training_loss, testing_acc, testing_loss)
 
 class train:
+
     def __init__(self):
 
         self.train_losses = []
